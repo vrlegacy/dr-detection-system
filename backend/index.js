@@ -3,6 +3,7 @@ import cors from "cors";
 import Report from "./models/reports.js";
 import multer from "multer";
 import mongoose from "mongoose";
+import axios from "axios";
 
 const app = express();
 app.use(cors());
@@ -13,7 +14,9 @@ app.get("/", (req, res) => {
 });
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/retinaDB")
+  .connect(
+    "mongodb+srv://vishwasrudramurthy26_db_user:0E7jVElYSAjbKnX5@cluster0.v4yfwoz.mongodb.net/civix-db?retryWrites=true&w=majority&appName=Cluster0"
+  )
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.log(err));
 
@@ -45,3 +48,29 @@ app.get("/reports", async (req, res) => {
   const reports = await Report.find().sort({ createdAt: -1 });
   res.json(reports);
 });
+
+//
+
+app.post("/analyze", upload.single("image"), async (req, res) => {
+  const { name, age, email, conditions } = req.body;
+
+  // Send image to FastAPI Model
+  const response = await axios.post("http://localhost:9000/predict", req.file, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  const result = response.data.result; // This is class ID
+
+  // Save report
+  const report = await Report.create({
+    name,
+    age,
+    email,
+    conditions,
+    result,
+    imagePath: req.file.path,
+  });
+
+  res.json(report);
+});
+///

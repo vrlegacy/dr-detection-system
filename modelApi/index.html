@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diabetic Retinopathy Detection</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f5f6fa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+      h1 {
+        color: #333;
+      }
+      .card {
+        background: #fff;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      input[type="file"] {
+        margin: 20px 0;
+      }
+      button {
+        background-color: #0078ff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #005fd1;
+      }
+      #result {
+        margin-top: 20px;
+        font-weight: bold;
+        color: #333;
+      }
+      img.preview {
+        margin-top: 15px;
+        max-width: 250px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>🩺 Diabetic Retinopathy Detection</h1>
+      <p>Upload a retina image to predict its stage.</p>
+
+      <input type="file" id="fileInput" accept="image/*" />
+      <br />
+      <button onclick="predict()">Predict</button>
+      <div id="result"></div>
+      <img id="preview" class="preview" src="" alt="" />
+    </div>
+
+    <script>
+      async function predict() {
+        const fileInput = document.getElementById("fileInput");
+        const resultDiv = document.getElementById("result");
+        const preview = document.getElementById("preview");
+
+        if (!fileInput.files.length) {
+          alert("Please select an image first!");
+          return;
+        }
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Show preview
+        preview.src = URL.createObjectURL(file);
+
+        resultDiv.innerText = "Predicting... ⏳";
+
+        try {
+          const response = await fetch("http://127.0.0.1:9000/predict", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+          resultDiv.innerText = `✅ Prediction: ${data.predicted_label}`;
+        } catch (err) {
+          resultDiv.innerText = "❌ Error: " + err.message;
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "torch": "^0.2.7",
+    "uvicorn": "^0.0.1-security"
+  }
+}
