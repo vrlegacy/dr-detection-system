@@ -2,98 +2,139 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Diabetic Retinopathy Detection</title>
     <style>
       body {
-        font-family: "Segoe UI", sans-serif;
-        background: #f5f6fa;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-      }
-      h1 {
-        color: #333;
-      }
-      .card {
-        background: #fff;
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        font-family: Arial, sans-serif;
         text-align: center;
+        background: #f5f8fc;
+        padding-top: 40px;
       }
-      input[type="file"] {
-        margin: 20px 0;
+      h2 {
+        color: #222;
+      }
+      input,
+      button {
+        padding: 10px;
+        margin: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 15px;
       }
       button {
-        background-color: #0078ff;
+        background: #007bff;
         color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 6px;
         cursor: pointer;
       }
       button:hover {
-        background-color: #005fd1;
+        background: #0056b3;
       }
-      #result {
-        margin-top: 20px;
-        font-weight: bold;
-        color: #333;
-      }
-      img.preview {
+      .preview {
         margin-top: 15px;
-        max-width: 250px;
-        border-radius: 8px;
+      }
+      img {
+        width: 200px;
+        border-radius: 10px;
+        margin-top: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+      .result {
+        margin-top: 25px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .score-bar {
+        width: 300px;
+        height: 20px;
+        background: #ddd;
+        margin: 15px auto;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .bar {
+        height: 20px;
+        width: 0%;
+        background: #4caf50;
+        transition: width 0.8s ease, background 0.8s ease;
       }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>🩺 Diabetic Retinopathy Detection</h1>
-      <p>Upload a retina image to predict its stage.</p>
+    <h2>🩺 Diabetic Retinopathy Detection</h2>
+    <form id="uploadForm">
+      <input
+        type="file"
+        id="imageInput"
+        name="file"
+        accept="image/*"
+        required
+      />
+      <button type="submit">Predict</button>
+    </form>
 
-      <input type="file" id="fileInput" accept="image/*" />
-      <br />
-      <button onclick="predict()">Predict</button>
-      <div id="result"></div>
-      <img id="preview" class="preview" src="" alt="" />
+    <div class="preview">
+      <img id="previewImg" src="#" alt="Preview" style="display: none" />
     </div>
 
+    <div class="result" id="result"></div>
+    <div class="score-bar"><div class="bar" id="bar"></div></div>
+
     <script>
-      async function predict() {
-        const fileInput = document.getElementById("fileInput");
-        const resultDiv = document.getElementById("result");
-        const preview = document.getElementById("preview");
+      const form = document.getElementById("uploadForm");
+      const resultDiv = document.getElementById("result");
+      const bar = document.getElementById("bar");
+      const previewImg = document.getElementById("previewImg");
 
-        if (!fileInput.files.length) {
-          alert("Please select an image first!");
-          return;
+      document.getElementById("imageInput").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          previewImg.src = URL.createObjectURL(file);
+          previewImg.style.display = "block";
         }
+      });
 
-        const file = fileInput.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
+      // Simulated prediction labels
+      const labels = [
+        "No Diabetic Retinopathy",
+        "Mild",
+        "Moderate",
+        "Severe",
+        "Proliferative DR",
+      ];
 
-        // Show preview
-        preview.src = URL.createObjectURL(file);
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-        resultDiv.innerText = "Predicting... ⏳";
+        resultDiv.textContent = "Processing... 🕒";
+        bar.style.width = "0%";
+        bar.style.background = "#4caf50";
 
-        try {
-          const response = await fetch("http://127.0.0.1:9000/predict", {
-            method: "POST",
-            body: formData,
-          });
-          const data = await response.json();
-          resultDiv.innerText = `✅ Prediction: ${data.predicted_label}`;
-        } catch (err) {
-          resultDiv.innerText = "❌ Error: " + err.message;
+        // Simulate prediction delay
+        await new Promise((r) => setTimeout(r, 1000));
+
+        // Generate random prediction (1–5)
+        const randomIndex = Math.floor(Math.random() * 5);
+        const severityScore = randomIndex + 1;
+        const confidence = (Math.random() * 50 + 50).toFixed(2); // random 50–100%
+
+        const predictedLabel = labels[randomIndex];
+
+        // Show results
+        resultDiv.textContent = `Prediction: ${predictedLabel} 
+        (Score: ${severityScore}/5, Confidence: ${confidence}%)`;
+
+        // Progress bar color
+        const width = (severityScore / 5) * 100;
+        bar.style.width = `${width}%`;
+
+        if (severityScore <= 2) {
+          bar.style.background = "#4caf50"; // green
+        } else if (severityScore === 3) {
+          bar.style.background = "#ffcc00"; // yellow
+        } else {
+          bar.style.background = "#f44336"; // red
         }
-      }
+      });
     </script>
   </body>
 </html>
