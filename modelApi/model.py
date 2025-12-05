@@ -1,63 +1,67 @@
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
+from torchvision import models, transforms
 from PIL import Image
+import io
 
-# ✅ Define your model class (must match the one used during training)
-# If you used EfficientNet, MobileNet, or ResNet — adjust accordingly.
-class SimpleRetinalDiseaseClassifier(nn.Module):
-    def __init__(self, base_model):
-        super(SimpleRetinalDiseaseClassifier, self).__init__()
-        self.base_model = base_model
-        in_features = self.base_model.classifier[1].in_features
-        self.base_model.classifier[1] = nn.Linear(in_features, 5)
-
-    def forward(self, x):
-        return self.base_model(x)
-
-# ✅ Load pretrained model backbone
-from torchvision import models
-base_model = models.efficientnet_b0(pretrained=False)
-model = SimpleRetinalDiseaseClassifier(base_model)
-
-# ✅ Load your .pth file
-state_dict = torch.load("colormodel_clean.pth", map_location="cpu")
-model.load_state_dict(state_dict, strict=False)
-model.eval()
-
-# ✅ Class names
+# -------- Class Names ----------
 CLASS_NAMES = [
-    "No Diabetic Retinopathy",
-    "Mild Diabetic Retinopathy",
-    "Moderate Diabetic Retinopathy",
-    "Severe Diabetic Retinopathy",
-    "Proliferative Diabetic Retinopathy"
+    "No_DR",
+    "Mild",
+    "Moderate",
+    "Severe",
+    "Proliferative_DR"
 ]
 
-# ✅ Image transformation
+# -------- Load Proper Model ----------
+def load_model():
+    model = models.efficientnet_b0(weights=None)
+    model.classifier[1] = nn.Linear(1280, 5)
+
+    state_dict = torch.load("dr_model1.pth", map_location="cpu")
+    model.load_state_dict(state_dict)
+
+    model.eval()
+    return model
+
+model = load_model()
+
+# -------- Image Transform ----------
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],
-                         [0.229, 0.224, 0.225])
+    transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])
 ])
 
-def predict(image_path):
-    image = Image.open(image_path).convert("RGB")
-    img_tensor = transform(image).unsqueeze(0)
+# -------- Image Validation + Prediction ----------
+def is_retina_image(img: Image.Image):
+    # Simple sanity check (you can improve later)
+    w, h = img.size
+    return w > 50 and h > 50
+
+def predict(image_bytes: bytes):
+    try:
+        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except:
+        return {
+            "error": "Invalid image file"
+        }
+
+    # 📌 Validate Retina-like Image
+    if not is_retina_image(img):
+        return {
+            "error": "Image is not a valid retina image"
+        }
+
+    input_tensor = transform(img).unsqueeze(0)
 
     with torch.no_grad():
-        outputs = model(img_tensor)
-        probabilities = torch.nn.functional.softmax(outputs, dim=1)
-        predicted_index = torch.argmax(probabilities).item()
-        confidence = probabilities[0][predicted_index].item()
-
-    predicted_label = CLASS_NAMES[predicted_index]
-    severity_score = predicted_index + 1  # 1–5 scale
+        outputs = model(input_tensor)
+        probs = torch.softmax(outputs, dim=1)
+        conf, pred = torch.max(probs, 1)
 
     return {
-        "predicted_index": predicted_index,
-        "predicted_label": predicted_label,
-        "severity_score": severity_score,
-        "confidence": round(confidence * 100, 2)
+        "predicted_index": int(pred.item()),
+        "predicted_label": CLASS_NAMES[pred.item()],
+        "confidence": round(float(conf.item() * 100), 2)
     }

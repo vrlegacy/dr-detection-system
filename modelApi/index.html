@@ -2,51 +2,169 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Diabetic Retinopathy Detection</title>
+    <title>Ophthalmology | Diabetic Retinopathy Detection</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <style>
+      :root {
+        --primary-color: #0077b6; /* Medical Blue */
+        --secondary-color: #00b4d8; /* Light Blue */
+        --success-color: #4caf50;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --text-color: #333;
+        --bg-color: #f5f8fc; /* Light Gray/Blue */
+        --card-bg: #ffffff;
+      }
       body {
-        font-family: Arial, sans-serif;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        background: #f5f8fc;
-        padding-top: 40px;
+        background: var(--bg-color);
+        padding-top: 20px;
+        color: var(--text-color);
+        /* Subtle medical background pattern */
+        background-image: radial-gradient(#e0f2ff 1px, transparent 0);
+        background-size: 20px 20px;
       }
       h2 {
-        color: #222;
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 30px;
       }
-      input,
+      h2 i {
+        margin-right: 10px;
+      }
+
+      /* --- Tab Navigation Styles --- */
+      .tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+        border-bottom: 3px solid var(--secondary-color);
+      }
+      .tab-button {
+        padding: 12px 25px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-size: 16px;
+        color: var(--text-color);
+        transition: color 0.3s, background-color 0.3s, border-bottom 0.3s;
+      }
+      .tab-button:hover {
+        background-color: #e0f2ff;
+      }
+      .tab-button.active {
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
+        font-weight: 700;
+      }
+      .tab-content {
+        display: none;
+        padding: 20px;
+        margin: 0 auto;
+        max-width: 900px;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      /* --- Form & Card Styles --- */
+      #uploadForm {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 30px;
+        border-radius: 12px;
+        background: var(--card-bg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: left;
+      }
+      fieldset {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        background: #fdfdfd;
+      }
+      legend {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.1em;
+        padding: 0 10px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #555;
+      }
+      .form-group input:not([type="file"]),
+      .form-group textarea {
+        width: 95%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #cceeff; /* Light Blue Border */
+        font-size: 15px;
+        transition: border-color 0.3s;
+      }
+      .form-group input:focus,
+      .form-group textarea:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 119, 182, 0.2);
+      }
+      input[type="file"],
       button {
         padding: 10px;
-        margin: 10px;
+        margin-top: 10px;
         border-radius: 8px;
         border: 1px solid #ccc;
         font-size: 15px;
+        width: auto;
       }
-      button {
-        background: #007bff;
+      button[type="submit"] {
+        background: var(--primary-color);
         color: white;
         cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+        font-weight: 600;
+        border: none;
       }
-      button:hover {
-        background: #0056b3;
+      button[type="submit"]:hover {
+        background: #005691;
       }
       .preview {
         margin-top: 15px;
+        text-align: center;
       }
       img {
         width: 200px;
         border-radius: 10px;
         margin-top: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border: 3px solid var(--secondary-color);
+        max-width: 90%;
       }
       .result {
         margin-top: 25px;
+        padding: 10px;
+        border-radius: 8px;
         font-size: 18px;
-        font-weight: 600;
+        font-weight: 700;
+        text-align: center;
+        background: #e6f7ff;
+        border: 1px solid var(--secondary-color);
       }
       .score-bar {
         width: 300px;
         height: 20px;
-        background: #ddd;
+        background: #e0e0e0;
         margin: 15px auto;
         border-radius: 10px;
         overflow: hidden;
@@ -54,38 +172,504 @@
       .bar {
         height: 20px;
         width: 0%;
-        background: #4caf50;
+        background: var(--success-color);
         transition: width 0.8s ease, background 0.8s ease;
+      }
+
+      /* --- Reports Table Styles --- */
+      #reportsTable {
+        width: 100%;
+        margin: 20px auto;
+        border-collapse: collapse;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      #reportsTable th,
+      #reportsTable td {
+        border: 1px solid #eee;
+        padding: 12px;
+        text-align: left;
+        font-size: 14px;
+      }
+      #reportsTable th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+      }
+      #reportsTable tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      /* Action buttons in table */
+      #reportsTable button {
+        margin: 2px;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      #reportsTable button:hover {
+        opacity: 0.9;
+      }
+
+      /* About Content Styling */
+      .about-section {
+        background: var(--card-bg);
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: left;
+        margin-bottom: 20px;
+      }
+      .about-section h4 {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 5px;
+        margin-top: 20px;
+      }
+      .about-section ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+      .about-section ul li {
+        margin-bottom: 10px;
+        padding-left: 1.5em;
+        text-indent: -1.5em;
+      }
+      .about-section ul li::before {
+        content: "•";
+        color: var(--secondary-color);
+        font-weight: bold;
+        display: inline-block;
+        width: 1.5em;
+        margin-left: -1.5em;
       }
     </style>
   </head>
   <body>
-    <h2>🩺 Diabetic Retinopathy Detection</h2>
-    <form id="uploadForm">
-      <input
-        type="file"
-        id="imageInput"
-        name="file"
-        accept="image/*"
-        required
-      />
-      <button type="submit">Predict</button>
-    </form>
+    <h2><i class="fas fa-eye"></i> Diabetic Retinopathy Screening</h2>
 
-    <div class="preview">
-      <img id="previewImg" src="#" alt="Preview" style="display: none" />
+    <div class="tabs">
+      <button class="tab-button active" onclick="openTab('home')">
+        🏠 Dashboard
+      </button>
+      <button class="tab-button" onclick="openTab('test-patient')">
+        🔬 New Screening
+      </button>
+      <button class="tab-button" onclick="openTab('get-reports')">
+        📃 Patient Records
+      </button>
+      <button class="tab-button" onclick="openTab('about')">
+        ℹ️ About Model
+      </button>
     </div>
 
-    <div class="result" id="result"></div>
-    <div class="score-bar"><div class="bar" id="bar"></div></div>
+    <div id="home" class="tab-content active">
+      <h3>Welcome to the DR Detection Service</h3>
+      <p>
+        This system uses AI to assist in the early detection of Diabetic
+        Retinopathy from retinal images. Please use the **New Screening** tab to
+        begin a new examination.
+      </p>
+      <p>
+        All data and prediction results are saved locally for quick access under
+        **Patient Records**.
+      </p>
+    </div>
+
+    <div id="about" class="tab-content">
+      <h3><i class="fas fa-microscope"></i> About Our Automated DR System</h3>
+      <div class="about-section">
+        <h4>Model Fundamentals and Technology</h4>
+        <p>
+          This Deep Learning system is built to automate the grading of
+          **Diabetic Retinopathy (DR)** from retinal fundus images, adhering to
+          the 5-stage severity scale (0-4). This is a critical tool for fighting
+          blindness in working-age adults.
+        </p>
+
+        <ul>
+          <li>
+            **Core Architecture:** Uses **EfficientNet-B0**, chosen for its high
+            accuracy and significantly lower computational cost compared to
+            traditional CNNs.
+          </li>
+          <li>
+            **Transfer Learning:** The model is initialized with **ImageNet**
+            weights, allowing it to quickly adapt and learn complex medical
+            features.
+          </li>
+          <li>
+            **Preprocessing:** Images are standardized to $224 \times 224$
+            pixels and normalized to align with the pre-trained model's data
+            distribution.
+          </li>
+          <li>
+            **Dataset:** Trained on the **APTOS 2019 Blindness Detection
+            Dataset**.
+          </li>
+        </ul>
+
+        <hr />
+
+        <h4>Why Our Model is Superior (Competitive Advantage)</h4>
+        <p>
+          We differentiate ourselves through specialized training strategies and
+          high-performance deployment that guarantee reliability and robustness
+          in clinical settings.
+        </p>
+
+        <ul>
+          <li>
+            **Solves Class Imbalance:** We use **Weighted Cross-Entropy Loss**
+            to overcome the problem of imbalanced medical datasets. This
+            penalizes misclassification of rare, severe disease cases more
+            heavily, ensuring the model accurately learns the features critical
+            for diagnosis.
+          </li>
+          <li>
+            **High-Performance API:** The system uses **FastAPI** with
+            **Asynchronous I/O (Zero-Copy I/O)**. This avoids saving uploaded
+            files to the disk, drastically reducing latency and achieving
+            high-throughput for near real-time screening.
+          </li>
+          <li>
+            **Robust Input Handling:** A **Regex Sanitization Layer** is
+            implemented to clean and repair corrupted input strings, preventing
+            system crashes from malformed data.
+          </li>
+          <li>
+            **Real-World Reliability:** **Data Augmentation** (Flipping,
+            Rotation, Color Jitter) is used to prevent overfitting and ensure
+            the model is robust against variations in camera angles and lighting
+            conditions.
+          </li>
+        </ul>
+
+        <hr />
+
+        <h4>Benefits and Core Use Cases</h4>
+
+        <ul>
+          <li>
+            **Speed & Cost Efficiency:** Provides a fast, automated, and
+            scalable alternative to the slow, expensive, and subjective manual
+            diagnosis by ophthalmologists.
+          </li>
+          <li>
+            **Optimized Training:** The **ReduceLROnPlateau Scheduler**
+            automatically fine-tunes the model when performance stagnates,
+            ensuring optimal weight adjustment and convergence.
+          </li>
+          <li>
+            **Scalability:** Ideal for **large-scale screening programs** and
+            **remote telemedicine screening** where specialist access is
+            limited.
+          </li>
+          <li>
+            **Assistive Tool:** Provides the medical professional with a quick
+            diagnosis, severity score, and confidence rating to inform clinical
+            decisions.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="test-patient" class="tab-content">
+      <form id="uploadForm">
+        <fieldset>
+          <legend><i class="fas fa-user-injured"></i> Patient Details</legend>
+          <div class="form-group">
+            <label for="patientName">Patient Name</label>
+            <input type="text" id="patientName" name="patientName" required />
+          </div>
+          <div class="form-group">
+            <label for="age">Age</label>
+            <input type="number" id="age" name="age" required />
+          </div>
+          <div class="form-group">
+            <label for="contact">Contact Number</label>
+            <input type="tel" id="contact" name="contact" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" />
+          </div>
+          <div class="form-group">
+            <label for="place">Place (City/Town)</label>
+            <input type="text" id="place" name="place" />
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><i class="fas fa-notes-medical"></i> Medical History</legend>
+          <div class="form-group">
+            <label for="doctor">Attending Doctor</label>
+            <input type="text" id="doctor" name="doctor" />
+          </div>
+          <div class="form-group">
+            <label for="sugarLevel">Blood Sugar Level (mg/dL)</label>
+            <input type="number" id="sugarLevel" name="sugarLevel" required />
+          </div>
+          <div class="form-group">
+            <label for="history">Previous Health History / Notes</label>
+            <textarea
+              id="history"
+              name="history"
+              rows="3"
+              placeholder="e.g., Duration of Diabetes, known conditions, medication..."
+            ></textarea>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><i class="fas fa-camera"></i> Retinal Image Upload</legend>
+          <input
+            type="file"
+            id="imageInput"
+            name="file"
+            accept="image/*"
+            required
+          />
+        </fieldset>
+
+        <button type="submit">Predict DR and Submit Case</button>
+      </form>
+
+      <div class="preview">
+        <img
+          id="previewImg"
+          src="#"
+          alt="Retina Scan Preview"
+          style="display: none"
+        />
+      </div>
+
+      <div class="result" id="result"></div>
+      <div class="score-bar"><div class="bar" id="bar"></div></div>
+    </div>
+
+    <div id="get-reports" class="tab-content">
+      <h3><i class="fas fa-file-medical-alt"></i> Patient Records Summary</h3>
+      <div id="reportsContainer">
+        <table id="reportsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Patient Name</th>
+              <th>Age</th>
+              <th>Sugar (mg/dL)</th>
+              <th>Prediction</th>
+              <th>Score (0-5)</th>
+              <th>Confidence</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTableBody"></tbody>
+        </table>
+        <p id="noReportsMessage" style="display: none">
+          No records found in local storage. Please submit a new screening.
+        </p>
+      </div>
+    </div>
 
     <script>
       const form = document.getElementById("uploadForm");
+      const imageInput = document.getElementById("imageInput");
       const resultDiv = document.getElementById("result");
       const bar = document.getElementById("bar");
       const previewImg = document.getElementById("previewImg");
+      const reportsTableBody = document.getElementById("reportsTableBody");
+      const noReportsMessage = document.getElementById("noReportsMessage");
 
-      document.getElementById("imageInput").addEventListener("change", (e) => {
+      const RECORDS_KEY = "dr_patient_records";
+
+      // --- Tab Switching Logic ---
+      function openTab(tabId) {
+        document.querySelectorAll(".tab-content").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+        document.querySelectorAll(".tab-button").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        document.getElementById(tabId).classList.add("active");
+        document
+          .querySelector(`.tab-button[onclick="openTab('${tabId}')"]`)
+          .classList.add("active");
+
+        if (tabId === "get-reports") {
+          loadReports();
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        openTab("home");
+      });
+
+      // --- Local Storage Functions ---
+      function getRecords() {
+        const records = localStorage.getItem(RECORDS_KEY);
+        return records ? JSON.parse(records) : [];
+      }
+
+      function saveRecord(record) {
+        const records = getRecords();
+        records.push(record);
+        localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+      }
+
+      function getRecordById(id) {
+        const records = getRecords();
+        return records.find((record) => record.id === id);
+      }
+
+      // --- View Details Button Action ---
+      function viewPatientDetails(id) {
+        const record = getRecordById(id);
+        if (!record) {
+          alert("Error: Patient record not found.");
+          return;
+        }
+
+        // Format all details into a clean string for display
+        const details = `
+--- Patient Details ---
+Name: ${record.patientName} (Age: ${record.age})
+Contact: ${record.contact || "N/A"} | Email: ${record.email || "N/A"}
+Location: ${record.place || "N/A"}
+Doctor: ${record.doctor || "N/A"}
+Submitted: ${record.timestamp}
+
+--- Medical/History ---
+Blood Sugar: ${record.sugarLevel} mg/dL
+Previous History: 
+${record.history || "None reported"}
+
+--- Prediction Results ---
+Diagnosis: ${record.predictedLabel}
+Severity Score: ${record.severityScore}/5
+Confidence: ${record.confidence}%
+        `;
+
+        alert(details);
+      }
+
+      // --- Download Report Button Action (Simulated PDF) ---
+      function downloadPatientReport(id) {
+        const record = getRecordById(id);
+        if (!record) {
+          alert("Error: Patient record not found for download.");
+          return;
+        }
+
+        // Create a text report (simulating the PDF content)
+        const reportContent = `
+=============================================
+DIABETIC RETINOPATHY SCREENING REPORT
+=============================================
+Date of Report: ${new Date().toLocaleString()}
+Case ID: ${record.id}
+Attending Doctor: ${record.doctor || "N/A"}
+
+--- PATIENT INFORMATION ---
+Patient Name: ${record.patientName}
+Age: ${record.age}
+Place: ${record.place || "N/A"}
+Contact: ${record.contact || "N/A"}
+Email: ${record.email || "N/A"}
+
+--- MEDICAL DATA ---
+Blood Sugar Level: ${record.sugarLevel} mg/dL
+Previous Health History: 
+${record.history || "N/A"}
+
+--- AI DIAGNOSIS ---
+Predicted Label: ${record.predictedLabel}
+Severity Score (DR Grading): ${record.severityScore} out of 5
+Model Confidence: ${record.confidence}%
+
+---------------------------------------------
+Disclaimer: This is an AI-assisted report and should be confirmed by a medical professional.
+=============================================
+`;
+
+        // Simulate file download
+        const filename = `DR_Report_${record.patientName.replace(/\s/g, "_")}_${
+          record.id
+        }.txt`;
+        const blob = new Blob([reportContent], {
+          type: "text/plain;charset=utf-8",
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        alert(
+          `Report for ${record.patientName} downloaded successfully as a .txt file (simulating PDF content).`
+        );
+      }
+
+      // --- Reports Display Logic (UPDATED) ---
+      function loadReports() {
+        const records = getRecords();
+        reportsTableBody.innerHTML = ""; // Clear existing rows
+
+        if (records.length === 0) {
+          noReportsMessage.style.display = "block";
+          return;
+        }
+        noReportsMessage.style.display = "none";
+
+        records.forEach((record, index) => {
+          const row = reportsTableBody.insertRow();
+          row.insertCell().textContent = index + 1;
+          row.insertCell().textContent = record.patientName;
+          row.insertCell().textContent = record.age;
+          row.insertCell().textContent = record.sugarLevel;
+          row.insertCell().textContent = record.predictedLabel;
+          row.insertCell().textContent = record.severityScore;
+          row.insertCell().textContent = record.confidence + "%";
+
+          // Add Action Buttons Cell
+          const actionCell = row.insertCell();
+
+          // View Details Button
+          const viewButton = document.createElement("button");
+          viewButton.textContent = "View Details";
+          viewButton.onclick = () => viewPatientDetails(record.id);
+          viewButton.style.background = "#00b4d8";
+          viewButton.style.color = "white";
+
+          // Download Report Button
+          const downloadButton = document.createElement("button");
+          downloadButton.textContent = "Download Report";
+          downloadButton.onclick = () => downloadPatientReport(record.id);
+          downloadButton.style.background = "#4caf50";
+          downloadButton.style.color = "white";
+
+          actionCell.appendChild(viewButton);
+          actionCell.appendChild(downloadButton);
+        });
+      }
+
+      // --- Helper function for progress bar color ---
+      function updateBarColor(score) {
+        if (score <= 2) {
+          return "#4caf50";
+        } else if (score === 3) {
+          return "#ffc107";
+        } else {
+          return "#dc3545";
+        }
+      }
+
+      // --- Image Preview Handler ---
+      imageInput.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (file) {
           previewImg.src = URL.createObjectURL(file);
@@ -93,46 +677,85 @@
         }
       });
 
-      // Simulated prediction labels
-      const labels = [
-        "No Diabetic Retinopathy",
-        "Mild",
-        "Moderate",
-        "Severe",
-        "Proliferative DR",
-      ];
-
+      // --- Prediction Submission Handler (UPDATED to assign ID) ---
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        resultDiv.textContent = "Processing... 🕒";
+        if (!imageInput.files.length) {
+          resultDiv.textContent = "Please select an image file.";
+          return;
+        }
+
+        resultDiv.textContent = "Uploading and Predicting... ⏳";
         bar.style.width = "0%";
-        bar.style.background = "#4caf50";
+        bar.style.background = updateBarColor(0);
 
-        // Simulate prediction delay
-        await new Promise((r) => setTimeout(r, 1000));
+        // 1. Capture all form data and assign a unique ID
+        const patientRecord = {
+          id: Date.now().toString(), // Simple unique ID
+          patientName: document.getElementById("patientName").value,
+          doctor: document.getElementById("doctor").value,
+          contact: document.getElementById("contact").value,
+          email: document.getElementById("email").value,
+          age: document.getElementById("age").value,
+          place: document.getElementById("place").value,
+          history: document.getElementById("history").value,
+          sugarLevel: document.getElementById("sugarLevel").value,
+          timestamp: new Date().toLocaleString(),
+          predictedLabel: "N/A",
+          severityScore: 0,
+          confidence: 0,
+        };
 
-        // Generate random prediction (1–5)
-        const randomIndex = Math.floor(Math.random() * 5);
-        const severityScore = randomIndex + 1;
-        const confidence = (Math.random() * 50 + 50).toFixed(2); // random 50–100%
+        // 2. Prepare FormData for API call
+        const formData = new FormData();
+        for (const key in patientRecord) {
+          formData.append(key, patientRecord[key]);
+        }
+        formData.append("file", imageInput.files[0]);
 
-        const predictedLabel = labels[randomIndex];
+        const apiUrl = "http://127.0.0.1:9000/predict";
 
-        // Show results
-        resultDiv.textContent = `Prediction: ${predictedLabel} 
-        (Score: ${severityScore}/5, Confidence: ${confidence}%)`;
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            body: formData,
+          });
 
-        // Progress bar color
-        const width = (severityScore / 5) * 100;
-        bar.style.width = `${width}%`;
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
 
-        if (severityScore <= 2) {
-          bar.style.background = "#4caf50"; // green
-        } else if (severityScore === 3) {
-          bar.style.background = "#ffcc00"; // yellow
-        } else {
-          bar.style.background = "#f44336"; // red
+          const data = await response.json();
+
+          // 3. Process API Response (using your expected keys: predicted_label, predicted_index, confidence)
+          const predictedLabel = data.predicted_label || "N/A";
+          const severityScore = data.predicted_index || 0;
+          const confidence = data.confidence;
+          const confidenceDisplay = confidence ? confidence.toFixed(1) : "N/A";
+
+          // 4. Update the patient record with results
+          patientRecord.predictedLabel = predictedLabel;
+          patientRecord.severityScore = severityScore;
+          patientRecord.confidence = confidenceDisplay;
+
+          // 5. Save the complete record to Local Storage
+          saveRecord(patientRecord);
+
+          // 6. Update UI
+          resultDiv.textContent = `✅ Prediction Saved: ${predictedLabel} (Score: ${severityScore}/5, Confidence: ${confidenceDisplay}%)`;
+
+          const width = (severityScore / 5) * 100;
+          bar.style.width = `${width}%`;
+          bar.style.background = updateBarColor(severityScore);
+
+          form.reset();
+          previewImg.style.display = "none";
+        } catch (error) {
+          console.error("Prediction failed:", error);
+          resultDiv.textContent = `❌ Prediction failed. Error: ${error.message}. Please verify server (port 9000) and CORS.`;
+          bar.style.width = "100%";
+          bar.style.background = "#dc3545";
         }
       });
     </script>

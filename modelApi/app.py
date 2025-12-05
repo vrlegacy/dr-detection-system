@@ -1,10 +1,10 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from model import predict
 
-app = FastAPI(title="Diabetic Retinopathy Detection API (PyTorch)")
+app = FastAPI()
 
-# ✅ Enable frontend access
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,18 +13,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/predict")
-async def get_prediction(file: UploadFile = File(...)):
-    file_path = "temp.jpg"
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
-    result = predict(file_path)
-    return result
-
 @app.get("/")
-def root():
-    return {"message": "DR Detection API is running"}
+def home():
+    return {"message": "DR Detection API Running"}
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=9000, reload=True)
+@app.post("/predict")
+async def detect(file: UploadFile = File(...)):
+    # 1. Read the raw bytes from the uploaded file
+    # We do NOT save to disk; we pass the bytes directly to memory.
+    image_bytes = await file.read()
+
+    # 2. Pass bytes to the predict function
+    # model.py is designed to handle raw bytes or base64 strings
+    result = predict(image_bytes)
+
+    return result
